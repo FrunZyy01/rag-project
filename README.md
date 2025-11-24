@@ -1,3 +1,10 @@
-# Project RAG
+# rag-project
 
-Setup awal untuk Progress 1
+Initial setup untuk Progress 1 (RAG Infrastructure).
+
+Isi folder:
+
+- backend/
+- data/
+- docs/
+- n8n/
