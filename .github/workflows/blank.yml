@@ -1,0 +1,19 @@
+name: WebApp SJK Workflow
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: npm install --prefix webapp-sjk
+
+      - name: Build project
+        run: npm run build --prefix webapp-sjk
