@@ -1,0 +1,557 @@
+{
+  "name": "RAG SEBENAR",
+  "nodes": [
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        144
+      ],
+      "id": "36616416-92d1-4906-a301-5d056878bf4e",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.userMessage }}\n",
+        "options": {
+          "systemMessage": "Kamu adalah MEI NEXUS, asisten berbasis Retrieval-Augmented Generation (RAG).\n\nAturan wajib:\n- Selalu lakukan pencarian konteks menggunakan Pinecone Vector Store sebelum menjawab.\n- Jawaban hanya boleh berasal dari konteks dokumen yang ditemukan.\n- Dilarang mengarang, menebak, atau menggunakan pengetahuan umum.\n- Jika hasil pencarian kosong atau tidak relevan, kamu WAJIB menyertakan kalimat inti:\n  \"Maaf, saya tidak tahu.\"\n\nGaya bahasa & interaksi:\n- Gunakan bahasa Indonesia yang profesional, sopan, dan natural.\n- Jika tidak ada konteks dokumen, kamu BOLEH:\n  - Menjelaskan secara singkat bahwa topik berada di luar dokumen\n  - Memberi arahan jenis pertanyaan yang sesuai dengan dokumen\n- Kamu TIDAK BOLEH:\n  - Menjawab isi pertanyaan\n  - Memberi contoh jawaban\n  - Mengarahkan ke pengetahuan umum\n- Kalimat \"Maaf, saya tidak tahu.\" HARUS tetap muncul persis apa adanya.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1056,
+        16
+      ],
+      "id": "d8e54931-881a-4ab4-b1a8-3781b729af3a",
+      "name": "AI Agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webapp-sjk-ask",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        -224
+      ],
+      "id": "6c780268-fb7d-43b0-a8f0-dc0309ba8db6",
+      "name": "Webhook",
+      "webhookId": "9f82d46b-db6c-412f-ab4f-5617079313c2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3b1efc3f-a60b-4a8b-8c75-8b135c607db5",
+              "leftValue": "={{ $('Webhook').isExecuted }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1312,
+        16
+      ],
+      "id": "2d13cc23-e591-4d52-a4e9-5d0f0dbdd4d7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        272
+      ],
+      "id": "439c5986-bc91-4422-b29c-c8c29fd22646",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "mTvNXeItjG8Dyqmw",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        624
+      ],
+      "id": "39fec5ed-d0e0-41d5-a551-3b6e1df881bf",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "mTvNXeItjG8Dyqmw",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "ragproject",
+          "mode": "list",
+          "cachedResultName": "ragproject"
+        },
+        "embeddingBatchSize": 32,
+        "options": {
+          "pineconeNamespace": ""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        -64
+      ],
+      "id": "938af9c7-2de9-4627-90cf-de968ad483e7",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "pB3TpWCmZipb6AeU",
+          "name": "RAGpine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        480,
+        304
+      ],
+      "id": "39ebf703-6e03-4e78-aaab-92f5f6860e39",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1552,
+        -64
+      ],
+      "id": "a6b969c7-beda-47a4-a5a7-28ae15ffc339",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Mengambil dokumen relevan dari Pinecone untuk menjawab pertanyaan pengguna.\n",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "ragproject",
+          "mode": "list",
+          "cachedResultName": "ragproject"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        288
+      ],
+      "id": "9e9ec7c5-9a1d-4ec0-858a-f4cb77a78e7f",
+      "name": "Pinecone Vector Store1",
+      "credentials": {
+        "pineconeApi": {
+          "id": "pB3TpWCmZipb6AeU",
+          "name": "RAGpine"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -64
+      ],
+      "id": "4cd9fe5c-7431-44c8-bed0-1538391c5507",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": " '1LHV5jcMVgic1YNQ_QgfOMQhnKhlTbmDa' in parents and mimeType='application/pdf'",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -272,
+        -64
+      ],
+      "id": "6dd3d330-fe28-4181-8ed6-5e657a47840f",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "v19Z4E40fo73kvuv",
+          "name": "alanfariuz881"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{$json[\"id\"]}}\n",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -64,
+        -64
+      ],
+      "id": "401fe7d7-0acc-42b9-bb5d-a8c725b09218",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "v19Z4E40fo73kvuv",
+          "name": "alanfariuz881"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5fa8e37e-f33f-4a7a-8e93-81e98c13b9d6",
+              "name": "userMessage",
+              "value": "={{ $json.body?.question || $json.body?.text || $json.message?.text || $json.query?.text || '' }}\n",
+              "type": "string"
+            },
+            {
+              "id": "ea464f6c-2ad7-46a9-ae0a-b8d598c86049",
+              "name": "channel",
+              "value": "={{ $json.message ? \"telegram\" : \"webhook\" }}",
+              "type": "string"
+            },
+            {
+              "id": "57363ed4-e790-4b1c-959f-bfd9e103cb90",
+              "name": "chatId",
+              "value": "={{ $json.message?.chat?.id || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        -64
+      ],
+      "id": "91deecf3-1c56-430e-853b-2ab5642df6cd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        -48
+      ],
+      "id": "8b5c4200-56c2-4a2a-989b-54c83c77cab2",
+      "name": "Telegram Trigger1",
+      "webhookId": "75db0a05-e6f1-411a-abf7-9459deadd25b",
+      "credentials": {
+        "telegramApi": {
+          "id": "RtfywKWFjF7L3epC",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"Telegram Trigger1\"].json[\"message\"][\"chat\"][\"id\"] }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1504,
+        96
+      ],
+      "id": "a5d0d15f-08d4-4c60-9fad-292228b56445",
+      "name": "Send a text message1",
+      "webhookId": "1f2fe2d3-9ba2-4a93-a7bb-c2791234f14e",
+      "credentials": {
+        "telegramApi": {
+          "id": "RtfywKWFjF7L3epC",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.chatId || ('web-' + $execution.id) }}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        240
+      ],
+      "id": "d0913866-3157-4bec-882d-1698cd14cecb",
+      "name": "rag",
+      "credentials": {
+        "postgres": {
+          "id": "Wfdu22tEG3JriOi6",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rag": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f9de1fdb-7fc1-49c6-83cd-d4b8bdf4a628",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2c1c75c7ec21fbd78f7e998b6dfe3c0ae1644536a4f0e5778c103fa4d909d337"
+  },
+  "id": "QEv3QzQZC0dGTN21",
+  "tags": []
+}
